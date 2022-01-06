@@ -19,7 +19,7 @@ class LinkToArchive
       $attribs['href'] = $url;
 
       // Analysing if it's already an archive link or .onion link
-      if( preg_match( '/^https?:\/\/[^\.]+\.?[^\.]+\.onion/', $url ) ) $linkVariant = 'onion';
+      if( preg_match( '/^https?:\/\/[^\.\/]+\.?[^\.\/]+\.onion(\/|$)/', $url ) ) $linkVariant = 'onion';
       else if( preg_match( '/^https:\/\/web\.archive\.org\/web/', $url ) ) $linkVariant = 'archive';
       else $linkVariant = 'normal';
 
