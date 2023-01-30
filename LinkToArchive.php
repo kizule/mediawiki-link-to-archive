@@ -32,20 +32,21 @@ class LinkToArchive
         $archiveAttribs['target'] = $attribs['target'];
       }
 
+      $link = "";
+
       // Create new link construct, starting with normal link
-      $link = Html::rawElement('a', $attribs, $text) . '<sup class="ext-link-to-archive" title="';
+      $link .= Html::rawElement('a', $attribs, $text) . '<sup class="ext-link-to-archive" title=';
 
       // title attribute according to link variant
-      if( $linkVariant == 'onion' ) $link .= 'This is an .onion link';
-      else if( $linkVariant == 'archive' ) $link .= 'This is a web.archive.org link';
-      else $link .= 'Link to archived version';
+      if( $linkVariant == 'onion' ) $link .= '"This is an .onion link">';
+      else if( $linkVariant == 'archive' ) $link .= '"This is a web.archive.org link">';
+      else $link .= '"Link to archived version">';
 
       // image and url of the small link according to link variant
-      $link .= '">'
-        . Html::rawElement('a', $archiveAttribs, '<img src="/w/images/'
-          . ( $linkVariant == 'onion' ? 'thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png' : '7/73/Internet_Archive_logo.png' )
-        . '" />' )
-        . '</sup>';
+      if( $linkVariant == 'onion' ) $link .= Html::rawElement('a', $archiveAttribs, '<img decoding="async" loading="lazy" src="/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png" width="15" height="15" alt="onion" />');
+      else                          $link .= Html::rawElement('a', $archiveAttribs, '<img decoding="async" loading="lazy" src="/w/images/7/73/Internet_Archive_logo.png" width="13" height="15" alt="archive.org" />');
+
+      $link .= '</sup>';
 
       // We need to return false if we want to modify the HTML of external links
       return false;
