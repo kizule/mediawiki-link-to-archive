@@ -15,78 +15,87 @@ class LinkToArchive
   * @return bool
   */
   public static function onLinkerMakeExternalLink($url, $text, &$link, array &$attribs, $linktype) {
-    if ($linktype && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https']) ) {
-      $attribs['href'] = $url;
 
-      // Analysing if it's already an archive link or .onion link
+    if ($linktype && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https']) ) {
+
+      // -----------------
+      // Identify use case
+
+      // Check if it's already an .onion link
       if( preg_match( '/^https?:\/\/[^\.\/]+\.?[^\.\/]+\.onion(\/|$)/', $url ) ) $linkVariant = 'onion';
+      // Check if it's a web.archive.org link
       else if( preg_match( '/^https:\/\/web\.archive\.org\/web/', $url ) ) $linkVariant = 'archive';
-      // archive.today has many mirrors that are all essentially the same site
-      else if( preg_match( '/^https:\/\/archive\.today/', $url ) ) $linkVariant = 'archivetoday';
-      else if( preg_match( '/^https:\/\/archive\.fo/', $url ) ) $linkVariant = 'archivetoday';
-      else if( preg_match( '/^https:\/\/archive\.is/', $url ) ) $linkVariant = 'archivetoday';
-      else if( preg_match( '/^https:\/\/archive\.li/', $url ) ) $linkVariant = 'archivetoday';
-      else if( preg_match( '/^https:\/\/archive\.md/', $url ) ) $linkVariant = 'archivetoday';
-      else if( preg_match( '/^https:\/\/archive\.ph/', $url ) ) $linkVariant = 'archivetoday';
-      else if( preg_match( '/^https:\/\/archive\.vn/', $url ) ) $linkVariant = 'archivetoday';
+      // Check if it's an archive.today link. archive.today has many mirrors that are all essentially the same site
+      else if( preg_match( '/^https:\/\/archive\.(today|fo|is|li|md|ph|vn)/', $url ) ) $linkVariant = 'archivetoday';
+      // Normal link, neither onion nor archives
       else $linkVariant = 'normal';
 
-      // Collection attributes for new link, url unchanged if archive link or .onion-link
-      $archiveAttribs = [
-        'rel' => $attribs['rel'],
-        'href' => ( $linkVariant == 'normal' ? 'https://web.archive.org/web/' : '' ) . $url,
-      ];
-      if (isset($attribs['target'])) {
-        $archiveAttribs['target'] = $attribs['target'];
-      }
+      // -------------------------
+      // Generating icon link data
 
-      $link = "";
-
-      // Create new link construct, starting with normal link
-      $link .= Html::rawElement('a', $attribs, $text) . '<sup class="ext-link-to-archive" title=';
-
-      // title attribute according to link variant
-      if( $linkVariant == 'onion' ) $link .= '"This is an .onion link">';
-      else if( $linkVariant == 'archive' ) $link .= '"This is a web.archive.org link">';
-      else if( $linkVariant == 'archivetoday' ) $link .= '"This is an archive.today link">';
-      else $link .= '"Link to archived version">';
-
-      // image and url of the small link according to link variant
-      if( $linkVariant == 'onion' )             $link .= Html::rawElement('a', $archiveAttribs, '<img decoding="async" loading="lazy" src="/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png" width="15" height="15" alt="onion" />');
-      // TODO: The image path specified here will need to be fixed, and
-      // archive.today's logo will need to be added to the server. The icon
-      // is at https://archive.ph/apple-touch-icon-144x144.png, and I've
-      // uploaded it to the Wiki already at
-      // https://www.kicksecure.com/wiki/File:Archive-today-favicon.png.
-      // This icon may need to be edited to have a transparent background.
-      else if( $linkVariant == 'archivetoday' ) $link .= Html::rawElement('a', $archiveAttribs, '<img decoding="async" loading="lazy" src="/w/images/TODO/FIX/THIS/PATH/Archive_Today_logo.png" width="13" height="15" alt="archive.today" />');
-      else                                      $link .= Html::rawElement('a', $archiveAttribs, '<img decoding="async" loading="lazy" src="/w/images/7/73/Internet_Archive_logo.png" width="13" height="15" alt="archive.org" />');
-
-      $link .= '</sup>';
-
-      // Only add an additional archive.today link icon for normal links.
-      if ( $linkVariant == 'normal' ) {
-        $archiveTodayAttribs = [
-          'rel' => $attribs['rel'],
-          'href' => 'https://archive.today/' . $url,
+      function singleIconLinkDataGenerator( $linkVariant, $url, $altTitle = null ) {
+        if( $linkVariant == 'onion' ) return [
+          'title' => 'This is an .onion link',
+          'href' => $url,
+          'src' => '/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png',
+          'width' => '15',
+          'alt' => 'onion icon',
         ];
-        if (isset($attribs['target'])) {
-          $archiveTodayAttribs['target'] = $attribs['target'];
-        }
-
-        // TODO: The class here may need to change in the event the CSS
-        // already used for archive.org links doesn't work here, or there's
-        // something beyond the CSS using it.
-        $link .= '<sup class="ext-link-to-archive" title="Link to archive.today search">';
-        // TODO: This image path needs fixed too.
-        $link .= HTML::rawElement('a', $archiveTodayAttribs, '<img decoding="async" loading="lazy" src="/w/images/TODO/FIX/THIS/PATH/Archive_Today_logo.png" width="13" height="15" alt="archive.org" />');
-        $link .= '</sup>';
+        else if( $linkVariant == 'archive' ) return [
+          'title' => ( $altTitle ? $altTitle : 'This is a web.archive.org link' ),
+          'href' => $url,
+          'src' => '/w/images/7/73/Internet_Archive_logo.png',
+          'width' => '13',
+          'alt' => 'archive.org icon',
+        ];
+        else if( $linkVariant == 'archivetoday' ) return [
+          'title' => ( $altTitle ? $altTitle : 'This is an archive.today link' ),
+          'href' => $url,
+          'src' => '/w/images/thumb/a/a5/Archive-today-favicon.png/40px-Archive-today-favicon.png',
+          'width' => '14',
+          'alt' => 'archive.today icon',
+        ];
+        else return [];
       }
 
-      // We need to return false if we want to modify the HTML of external links
+      $iconLinks = [];
+
+      if( $linkVariant == 'onion' ) array_push( $iconLinks, singleIconLinkDataGenerator( 'onion', $url ) );
+      else if( $linkVariant == 'archive' ) array_push( $iconLinks, singleIconLinkDataGenerator( 'archive', $url ) );
+      else if( $linkVariant == 'archivetoday' ) array_push( $iconLinks, singleIconLinkDataGenerator( 'archivetoday', $url ) );
+      else {
+        array_push( $iconLinks, singleIconLinkDataGenerator( 'archive', "https://web.archive.org/web/$url", 'Link to archived version on web.archive.org' ) );
+        array_push( $iconLinks, singleIconLinkDataGenerator( 'archivetoday', "https://archive.today/$url", 'Link to archived version on archive.today' ) );
+      }
+
+      // ------------------------
+      // Rendering link construct
+
+      // Create new link construct, starting with a normal link to the given external url
+      $link = Html::rawElement('a', array_merge( $attribs, [ 'href' => $url ] ), $text);
+
+      // Default link attributes, href added later individually
+
+      $linkAttributes = [];
+      if( isset( $attribs['rel'] ) ) $linkAttributes['rel'] = $attribs['rel'];
+      if( isset( $attribs['target'] ) ) $linkAttributes['target'] = $attribs['target'];
+
+      // Add one or more icon links according to link variant
+
+      $iconCount = count( $iconLinks );
+      for( $i = 0; $i < $iconCount; $i++ ) {
+        $linkData = $iconLinks[$i];
+        $link .= '<sup class="ext-link-to-archive'.( $i < $iconCount - 1 ? ' has-sibling' : '' ).'" title="'.$linkData['title'].'">'
+          . Html::rawElement( 'a', array_merge( $linkAttributes, [ 'href' => $linkData['href'] ] ), '<img src="'.$linkData['src'].'" alt="'.$linkData['alt'].'" width="'.$linkData['width'].'" height="15" decoding="async" loading="lazy">' )
+          . '</sup>';
+      }
+
+      // Changes indicated: We need to return false if we want to modify the HTML of external links
       return false;
     }
 
-    return null;
+    // No changes indicated by returning true
+    return true;
   }
+
 }
