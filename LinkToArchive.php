@@ -6,6 +6,44 @@ use Html;
 
 class LinkToArchive
 {
+  // =======
+  // PRIVATE
+
+  // Private Helper Fn for generating icon link data
+
+  private static function singleIconLinkDataGenerator($linkVariant, $url, $altTitle = null) {
+    if ($linkVariant == 'onion') {
+      return [
+        'title' => 'This is an .onion link',
+        'href' => $url,
+        'src' => '/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png',
+        'width' => '15',
+        'alt' => 'onion icon',
+      ];
+    } else if ($linkVariant == 'archive') {
+      return [
+        'title' => ($altTitle ? $altTitle : 'This is a web.archive.org link'),
+        'href' => $url,
+        'src' => '/w/images/7/73/Internet_Archive_logo.png',
+        'width' => '13',
+        'alt' => 'archive.org icon',
+      ];
+    } else if ($linkVariant == 'archivetoday') {
+      return [
+        'title' => ($altTitle ? $altTitle : 'This is an archive.today link'),
+        'href' => $url,
+        'src' => '/w/images/8/8f/Archive-today-logo-homage.svg',
+        'width' => '11',
+        'alt' => 'archive.today icon',
+      ];
+    }
+
+    return [];
+  }
+
+  // ======
+  // PUBLIC
+
   /**
   * @param $url
   * @param $text
@@ -33,39 +71,14 @@ class LinkToArchive
       // -------------------------
       // Generating icon link data
 
-      function singleIconLinkDataGenerator( $linkVariant, $url, $altTitle = null ) {
-        if( $linkVariant == 'onion' ) return [
-          'title' => 'This is an .onion link',
-          'href' => $url,
-          'src' => '/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png',
-          'width' => '15',
-          'alt' => 'onion icon',
-        ];
-        else if( $linkVariant == 'archive' ) return [
-          'title' => ( $altTitle ? $altTitle : 'This is a web.archive.org link' ),
-          'href' => $url,
-          'src' => '/w/images/7/73/Internet_Archive_logo.png',
-          'width' => '13',
-          'alt' => 'archive.org icon',
-        ];
-        else if( $linkVariant == 'archivetoday' ) return [
-          'title' => ( $altTitle ? $altTitle : 'This is an archive.today link' ),
-          'href' => $url,
-          'src' => '/w/images/thumb/a/a5/Archive-today-favicon.png/40px-Archive-today-favicon.png',
-          'width' => '14',
-          'alt' => 'archive.today icon',
-        ];
-        else return [];
-      }
-
       $iconLinks = [];
 
-      if( $linkVariant == 'onion' ) array_push( $iconLinks, singleIconLinkDataGenerator( 'onion', $url ) );
-      else if( $linkVariant == 'archive' ) array_push( $iconLinks, singleIconLinkDataGenerator( 'archive', $url ) );
-      else if( $linkVariant == 'archivetoday' ) array_push( $iconLinks, singleIconLinkDataGenerator( 'archivetoday', $url ) );
+      if( $linkVariant == 'onion' ) array_push( $iconLinks, self::singleIconLinkDataGenerator( 'onion', $url ) );
+      else if( $linkVariant == 'archive' ) array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archive', $url ) );
+      else if( $linkVariant == 'archivetoday' ) array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archivetoday', $url ) );
       else {
-        array_push( $iconLinks, singleIconLinkDataGenerator( 'archive', "https://web.archive.org/web/$url", 'Link to archived version on web.archive.org' ) );
-        array_push( $iconLinks, singleIconLinkDataGenerator( 'archivetoday', "https://archive.today/$url", 'Link to archived version on archive.today' ) );
+        array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archive', "https://web.archive.org/web/$url", 'Link to archived version on web.archive.org' ) );
+        array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archivetoday', "https://archive.today/$url", 'Link to archived version on archive.today' ) );
       }
 
       // ------------------------
