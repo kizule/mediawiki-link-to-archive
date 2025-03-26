@@ -17,7 +17,7 @@ class LinkToArchive
         'title' => 'This is an .onion link',
         'href' => $url,
         'src' => '/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png',
-        'width' => '15',
+        'width' => '16',
         'alt' => 'onion icon',
       ];
     } else if ($linkVariant == 'archive') {
@@ -25,7 +25,7 @@ class LinkToArchive
         'title' => ($altTitle ? $altTitle : 'This is a web.archive.org link'),
         'href' => $url,
         'src' => '/w/images/7/73/Internet_Archive_logo.png',
-        'width' => '13',
+        'width' => '14',
         'alt' => 'archive.org icon',
       ];
     } else if ($linkVariant == 'archivetoday') {
@@ -33,7 +33,7 @@ class LinkToArchive
         'title' => ($altTitle ? $altTitle : 'This is an archive.today link'),
         'href' => $url,
         'src' => '/w/images/8/8f/Archive-today-logo-homage.svg',
-        'width' => '11',
+        'width' => '12',
         'alt' => 'archive.today icon',
       ];
     }
@@ -99,7 +99,7 @@ class LinkToArchive
       for( $i = 0; $i < $iconCount; $i++ ) {
         $linkData = $iconLinks[$i];
         $link .= '<sup class="ext-link-to-archive'.( $i < $iconCount - 1 ? ' has-sibling' : '' ).'" title="'.$linkData['title'].'">'
-          . Html::rawElement( 'a', array_merge( $linkAttributes, [ 'href' => $linkData['href'] ] ), '<img src="'.$linkData['src'].'" alt="'.$linkData['alt'].'" width="'.$linkData['width'].'" height="15" decoding="async" loading="lazy">' )
+          . Html::rawElement( 'a', array_merge( $linkAttributes, [ 'href' => $linkData['href'] ] ), '<img src="'.$linkData['src'].'" alt="'.$linkData['alt'].'" width="'.$linkData['width'].'" height="16" decoding="async" loading="lazy">' )
           . '</sup>';
       }
 
@@ -112,3 +112,4 @@ class LinkToArchive
   }
 
 }
+
