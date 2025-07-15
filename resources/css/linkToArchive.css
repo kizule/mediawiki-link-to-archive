@@ -1,0 +1,48 @@
+/**
+ * Styles for Link to Archive extension
+ */
+
+.ext-link-to-archive {
+	margin-left: 0.3em;
+	margin-right: 3px;
+	vertical-align: text-top;
+	font-size: smaller;
+	white-space: nowrap;
+}
+
+.ext-link-to-archive.has-sibling {
+	margin-right: 0.3em;
+}
+
+.ext-link-to-archive a {
+	display: inline-block;
+	padding: 0 2px;
+}
+
+.ext-link-to-archive a span {
+	display: inline-block;
+	vertical-align: middle;
+	width: 16px;
+	height: 16px;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.ext-link-to-archive img {
+	vertical-align: middle;
+	border: 0;
+}
+
+/* For older browsers that don't support ResourceLoaderImageModule */
+.mw-linktoarchive-internet-archive {
+	background-image: url( ../images/internet-archive-logo.svg );
+}
+
+.mw-linktoarchive-archive-today {
+	background-image: url( ../images/archive-today-logo.svg );
+}
+
+.mw-linktoarchive-tor-onion {
+	background-image: url( ../images/tor-onion-logo.svg );
+}

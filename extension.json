@@ -1,22 +1,45 @@
 {
-  "name": "Link to Archive",
-  "author": "Pierre Rudloff",
-  "license-name": "GPL-3.0",
-  "version": "1.0.0",
-  "description": "Add a link to archive.org to every external link",
-  "url": "https://github.com/Archi-Strasbourg/mediawiki-link-to-archive",
-  "Hooks": {
-    "LinkerMakeExternalLink": [
-      "LinkToArchive\\LinkToArchive::onLinkerMakeExternalLink"
-    ]
-  },
-  "AutoloadClasses": {
-    "LinkToArchive\\LinkToArchive": "LinkToArchive.php"
-  },
-  "MessagesDirs": {
-    "ArchiHome": [
-      "i18n"
-    ]
-  },
-  "manifest_version": 2
+	"name": "Link to Archive",
+	"author": "Pierre Rudloff",
+	"license-name": "GPL-3.0",
+	"version": "1.1.0",
+	"descriptionmsg": "linktoarchive-desc",
+	"url": "https://github.com/Archi-Strasbourg/mediawiki-link-to-archive",
+	"Hooks": {
+		"LinkerMakeExternalLink": [
+			"LinkToArchive\\LinkToArchive::onLinkerMakeExternalLink"
+		],
+		"BeforePageDisplay": [
+			"LinkToArchive\\LinkToArchive::onBeforePageDisplay"
+		]
+	},
+	"AutoloadClasses": {
+		"LinkToArchive\\LinkToArchive": "LinkToArchive.php"
+	},
+	"MessagesDirs": {
+		"LinkToArchive": [
+			"i18n"
+		]
+	},
+	"ResourceModules": {
+		"ext.linkToArchive.styles": {
+			"styles": [
+				"css/linkToArchive.css"
+			]
+		},
+		"ext.linkToArchive.icons": {
+			"class": "ResourceLoaderImageModule",
+			"selector": ".mw-linktoarchive-{name}",
+			"images": {
+				"internet-archive": "images/internet-archive-logo.png",
+				"archive-today": "images/archive-today-logo.svg",
+				"tor-onion": "images/tor-onion-logo.png"
+			}
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "resources",
+		"remoteExtPath": "LinkToArchive/resources"
+	},
+	"manifest_version": 2
 }

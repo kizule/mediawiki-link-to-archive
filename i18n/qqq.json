@@ -1,0 +1,17 @@
+{
+	"@metadata": {
+		"authors": [
+			"Zoran Dori"
+		]
+	},
+	"linktoarchive-desc": "{{desc|name=Link to Archive|url=https://www.mediawiki.org/wiki/Extension:LinkToArchive}}",
+	"linktoarchive-onion-link": "Tooltip shown when hovering over an onion link icon. Onion links are Tor network addresses.",
+	"linktoarchive-onion-icon-alt": "Alt text for the onion icon image. Used for accessibility purposes.",
+	"linktoarchive-archive-link": "Tooltip shown when hovering over a web.archive.org link icon.",
+	"linktoarchive-archive-icon-alt": "Alt text for the archive.org icon image. Used for accessibility purposes.",
+	"linktoarchive-archivetoday-link": "Tooltip shown when hovering over an archive.today link icon.",
+	"linktoarchive-archivetoday-icon-alt": "Alt text for the archive.today icon image. Used for accessibility purposes.",
+	"linktoarchive-archive-link-desc": "Tooltip shown when hovering over a web.archive.org link that points to an archived version of a normal URL.",
+	"linktoarchive-archivetoday-link-desc": "Tooltip shown when hovering over an archive.today link that points to an archived version of a normal URL.",
+	"linktoarchive-archive-label": "Text label for archive links. This might be shown as text in some contexts."
+}
