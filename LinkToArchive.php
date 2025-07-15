@@ -16,7 +16,7 @@ class LinkToArchive {
 	 * @param string $linkVariant Type of link ('onion', 'archive', or 'archivetoday')
 	 * @param string $url URL for the link
 	 * @param string|null $customTitle Optional custom title for the link
-	 * @return array Array containing link attributes (title, href, class, width, height, alt) or empty array if variant not recognized
+	 * @return array Array containing link attributes (title, href, class, alt) or empty array if variant not recognized
 	 */
 	private static function singleIconLinkDataGenerator( $linkVariant, $url, $customTitle = null ) {
 		if ( $linkVariant == 'onion' ) {
@@ -24,8 +24,6 @@ class LinkToArchive {
 				'title' => wfMessage( 'linktoarchive-onion-link' )->text(),
 				'href' => $url,
 				'class' => 'mw-linktoarchive-tor-onion',
-				'width' => '16',
-				'height' => '16',
 				'alt' => wfMessage( 'linktoarchive-onion-icon-alt' )->text(),
 			];
 		} elseif ( $linkVariant == 'archive' ) {
@@ -33,8 +31,6 @@ class LinkToArchive {
 				'title' => ( $customTitle ? $customTitle : wfMessage( 'linktoarchive-archive-link' )->text() ),
 				'href' => $url,
 				'class' => 'mw-linktoarchive-internet-archive',
-				'width' => '14',
-				'height' => '14',
 				'alt' => wfMessage( 'linktoarchive-archive-icon-alt' )->text(),
 			];
 		} elseif ( $linkVariant == 'archivetoday' ) {
@@ -42,8 +38,6 @@ class LinkToArchive {
 				'title' => ( $customTitle ? $customTitle : wfMessage( 'linktoarchive-archivetoday-link' )->text() ),
 				'href' => $url,
 				'class' => 'mw-linktoarchive-archive-today',
-				'width' => '12',
-				'height' => '12',
 				'alt' => wfMessage( 'linktoarchive-archivetoday-icon-alt' )->text(),
 			];
 		}
