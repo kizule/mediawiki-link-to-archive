@@ -13,11 +13,14 @@ class LinkToArchive
   // Private Helper Fn for generating icon link data
 
   private static function singleIconLinkDataGenerator($linkVariant, $url, $altTitle = null) {
+    global $wgExtensionAssetsPath;
+    $basePath = "$wgExtensionAssetsPath/LinkToArchive/resources/images";
+
     if ($linkVariant == 'onion') {
       return [
         'title' => 'This is an .onion link',
         'href' => $url,
-        'src' => '/w/images/thumb/a/a8/Iconfinder_tor_386502.png/40px-Iconfinder_tor_386502.png',
+        'src' => "$basePath/tor-onion-logo.svg",
         'width' => '16',
         'alt' => 'onion icon',
       ];
@@ -25,7 +28,7 @@ class LinkToArchive
       return [
         'title' => ($altTitle ? $altTitle : 'This is a web.archive.org link'),
         'href' => $url,
-        'src' => '/w/images/7/73/Internet_Archive_logo.png',
+        'src' => "$basePath/internet-archive-logo.svg",
         'width' => '14',
         'alt' => 'archive.org icon',
       ];
@@ -33,7 +36,7 @@ class LinkToArchive
       return [
         'title' => ($altTitle ? $altTitle : 'This is an archive.today link'),
         'href' => $url,
-        'src' => '/w/images/8/8f/Archive-today-logo-homage.svg',
+        'src' => "$basePath/archive-today-logo.svg",
         'width' => '12',
         'alt' => 'archive.today icon',
       ];
