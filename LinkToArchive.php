@@ -2,7 +2,8 @@
 
 namespace LinkToArchive;
 
-use Html;
+use BadMethodCallException;
+use MediaWiki\Html\Html;
 
 class LinkToArchive
 {
@@ -45,26 +46,30 @@ class LinkToArchive
   // PUBLIC
 
   /**
-  * @param $url
-  * @param $text
-  * @param $link
-  * @param array $attribs
-  * @param $linktype
-  * @return bool
-  */
-  public static function onLinkerMakeExternalLink($url, $text, &$link, array &$attribs, $linktype) {
-
-    if ($linktype && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https']) ) {
+   * @param $url
+   * @param $text
+   * @param $link
+   * @param array $attribs
+   * @param $linktype
+   * @return bool|null
+   */
+  public static function onLinkerMakeExternalLink($url, $text, &$link, array &$attribs, $linktype): ?bool
+  {
+    if ($linktype && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'])) {
+      // Check if the URL ends with "action=edit"
+      if (str_contains($url, 'action=edit')) {
+          return null;
+      }
 
       // -----------------
       // Identify use case
 
       // Check if it's already an .onion link
-      if( preg_match( '/^https?:\/\/[^\.\/]+\.?[^\.\/]+\.onion(\/|$)/', $url ) ) $linkVariant = 'onion';
+      if (preg_match('/^https?:\/\/[^\.\/]+\.?[^\.\/]+\.onion(\/|$)/', $url)) $linkVariant = 'onion';
       // Check if it's a web.archive.org link
-      else if( preg_match( '/^https:\/\/web\.archive\.org\/web/', $url ) ) $linkVariant = 'archive';
+      else if (preg_match('/^https:\/\/web\.archive\.org\/web/', $url)) $linkVariant = 'archive';
       // Check if it's an archive.today link. archive.today has many mirrors that are all essentially the same site
-      else if( preg_match( '/^https:\/\/archive\.(today|fo|is|li|md|ph|vn)/', $url ) ) $linkVariant = 'archivetoday';
+      else if (preg_match('/^https:\/\/archive\.(today|fo|is|li|md|ph|vn)/', $url)) $linkVariant = 'archivetoday';
       // Normal link, neither onion nor archives
       else $linkVariant = 'normal';
 
@@ -73,43 +78,47 @@ class LinkToArchive
 
       $iconLinks = [];
 
-      if( $linkVariant == 'onion' ) array_push( $iconLinks, self::singleIconLinkDataGenerator( 'onion', $url ) );
-      else if( $linkVariant == 'archive' ) array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archive', $url ) );
-      else if( $linkVariant == 'archivetoday' ) array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archivetoday', $url ) );
+      if ($linkVariant == 'onion') $iconLinks[] = self::singleIconLinkDataGenerator('onion', $url);
+      else if ($linkVariant == 'archive') $iconLinks[] = self::singleIconLinkDataGenerator('archive', $url);
+      else if ($linkVariant == 'archivetoday') $iconLinks[] = self::singleIconLinkDataGenerator('archivetoday', $url);
       else {
-        array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archive', "https://web.archive.org/web/$url", 'Link to archived version on web.archive.org' ) );
-        array_push( $iconLinks, self::singleIconLinkDataGenerator( 'archivetoday', "https://archive.today/$url", 'Link to archived version on archive.today' ) );
+        $iconLinks[] = self::singleIconLinkDataGenerator('archive', "https://web.archive.org/web/$url", 'Link to archived version on web.archive.org');
+        $iconLinks[] = self::singleIconLinkDataGenerator('archivetoday', "https://archive.today/$url", 'Link to archived version on archive.today');
       }
 
       // ------------------------
       // Rendering link construct
 
       // Create new link construct, starting with a normal link to the given external url
-      $link = Html::rawElement('a', array_merge( $attribs, [ 'href' => $url ] ), $text);
+      $link = Html::rawElement('a', array_merge($attribs, ['href' => $url]), $text);
 
       // Default link attributes, href added later individually
-
       $linkAttributes = [];
-      if( isset( $attribs['rel'] ) ) $linkAttributes['rel'] = $attribs['rel'];
-      if( isset( $attribs['target'] ) ) $linkAttributes['target'] = $attribs['target'];
+      if (isset($attribs['rel'])) $linkAttributes['rel'] = $attribs['rel'];
+      if (isset($attribs['target'])) $linkAttributes['target'] = $attribs['target'];
 
       // Add one or more icon links according to link variant
-
-      $iconCount = count( $iconLinks );
-      for( $i = 0; $i < $iconCount; $i++ ) {
+      $iconCount = count($iconLinks);
+      for ($i = 0; $i < $iconCount; $i++) {
         $linkData = $iconLinks[$i];
-        $link .= '<sup class="ext-link-to-archive'.( $i < $iconCount - 1 ? ' has-sibling' : '' ).'" title="'.$linkData['title'].'">'
-          . Html::rawElement( 'a', array_merge( $linkAttributes, [ 'href' => $linkData['href'] ] ), '<img src="'.$linkData['src'].'" alt="'.$linkData['alt'].'" width="'.$linkData['width'].'" height="16" decoding="async" loading="lazy">' )
+
+        try {
+          $label = wfMessage('archive')->parse();
+        } catch (BadMethodCallException) {
+          $label = 'archive';
+        }
+
+        $link .= '<sup class="ext-link-to-archive' . ($i < $iconCount - 1 ? ' has-sibling' : '') . '" title="' . $linkData['title'] . '">'
+          . Html::rawElement('a', array_merge($linkAttributes, ['href' => $linkData['href']]),
+              '<img src="' . $linkData['src'] . '" alt="' . $linkData['alt'] . '" width="' . $linkData['width'] . '" height="16" decoding="async" loading="lazy">')
           . '</sup>';
       }
 
-      // Changes indicated: We need to return false if we want to modify the HTML of external links
+      // We need to return false if we want to modify the HTML of external links
       return false;
     }
 
-    // No changes indicated by returning true
-    return true;
+    return null;
   }
-
 }
 
