@@ -34,15 +34,32 @@
 	border: 0;
 }
 
-/* For older browsers that don't support ResourceLoaderImageModule */
+.mw-linktoarchive-tor-onion {
+	background-image: url( ../images/tor-onion-logo.svg );
+	background-repeat: no-repeat;
+	background-size: contain;
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+}
+
 .mw-linktoarchive-internet-archive {
 	background-image: url( ../images/internet-archive-logo.svg );
+	background-repeat: no-repeat;
+	background-size: contain;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	vertical-align: middle;
 }
 
 .mw-linktoarchive-archive-today {
 	background-image: url( ../images/archive-today-logo.svg );
-}
-
-.mw-linktoarchive-tor-onion {
-	background-image: url( ../images/tor-onion-logo.svg );
+	background-repeat: no-repeat;
+	background-size: contain;
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	vertical-align: middle;
 }

@@ -7,7 +7,7 @@ use MediaWiki\Output\OutputPage;
 
 class LinkToArchive {
 	public static function onBeforePageDisplay( OutputPage $out ) {
-		$out->addModuleStyles( [ 'ext.linkToArchive.styles', 'ext.linkToArchive.icons' ] );
+		$out->addModuleStyles( [ 'ext.linkToArchive.styles' ] );
 	}
 
 	/**

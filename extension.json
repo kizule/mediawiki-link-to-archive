@@ -26,15 +26,6 @@
 			"styles": [
 				"css/linkToArchive.css"
 			]
-		},
-		"ext.linkToArchive.icons": {
-			"class": "ResourceLoaderImageModule",
-			"selector": ".mw-linktoarchive-{name}",
-			"images": {
-				"internet-archive": "images/internet-archive-logo.png",
-				"archive-today": "images/archive-today-logo.svg",
-				"tor-onion": "images/tor-onion-logo.png"
-			}
 		}
 	},
 	"ResourceFileModulePaths": {
