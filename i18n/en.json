@@ -11,6 +11,6 @@
 	"linktoarchive-archive-label": "archive",
 	"linktoarchive-archivetoday-link": "This is an archive.today link",
 	"linktoarchive-archivetoday-label": "archive.today",
-	"linktoarchive-archive-link-desc": "Link to archived version on web.archive.org",
-	"linktoarchive-archivetoday-link-desc": "Link to archived version on archive.today"
+	"linktoarchive-archive-link-desc": "View archived version on web.archive.org",
+	"linktoarchive-archivetoday-link-desc": "View archived version on archive.today"
 }

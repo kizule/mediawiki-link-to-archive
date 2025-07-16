@@ -14,7 +14,7 @@
 		]
 	},
 	"AutoloadClasses": {
-		"LinkToArchive\\LinkToArchive": "LinkToArchive.php"
+		"LinkToArchive\\LinkToArchive": "src/LinkToArchive.php"
 	},
 	"MessagesDirs": {
 		"LinkToArchive": [
@@ -22,9 +22,17 @@
 		]
 	},
 	"ResourceModules": {
+		"ext.linkToArchive": {
+			"scripts": [
+				"js/linkToArchive.js"
+			],
+			"dependencies": [
+				"ext.linkToArchive.styles"
+			]
+		},
 		"ext.linkToArchive.styles": {
 			"styles": [
-				"css/linkToArchive.css"
+				"css/ext.linkToArchive.css"
 			]
 		}
 	},
