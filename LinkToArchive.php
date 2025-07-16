@@ -11,34 +11,31 @@ class LinkToArchive {
 	}
 
 	/**
-	 * Generates data array for a single icon link based on the link variant
+	 * Generates data array for a single text label link based on the link variant
 	 *
 	 * @param string $linkVariant Type of link ('onion', 'archive', or 'archivetoday')
 	 * @param string $url URL for the link
 	 * @param string|null $customTitle Optional custom title for the link
-	 * @return array Array containing link attributes (title, href, class, alt) or empty array if variant not recognized
+	 * @return array Array containing link attributes (title, href, label) or empty array if variant not recognized
 	 */
-	private static function singleIconLinkDataGenerator( $linkVariant, $url, $customTitle = null ) {
+	private static function singleLinkDataGenerator( $linkVariant, $url, $customTitle = null ) {
 		if ( $linkVariant == 'onion' ) {
 			return [
 				'title' => wfMessage( 'linktoarchive-onion-link' )->text(),
 				'href' => $url,
-				'class' => 'mw-linktoarchive-tor-onion',
-				'alt' => wfMessage( 'linktoarchive-onion-icon-alt' )->text(),
+				'label' => wfMessage( 'linktoarchive-onion-label' )->text(),
 			];
 		} elseif ( $linkVariant == 'archive' ) {
 			return [
 				'title' => ( $customTitle ? $customTitle : wfMessage( 'linktoarchive-archive-link' )->text() ),
 				'href' => $url,
-				'class' => 'mw-linktoarchive-internet-archive',
-				'alt' => wfMessage( 'linktoarchive-archive-icon-alt' )->text(),
+				'label' => wfMessage( 'linktoarchive-archive-label' )->text(),
 			];
 		} elseif ( $linkVariant == 'archivetoday' ) {
 			return [
 				'title' => ( $customTitle ? $customTitle : wfMessage( 'linktoarchive-archivetoday-link' )->text() ),
 				'href' => $url,
-				'class' => 'mw-linktoarchive-archive-today',
-				'alt' => wfMessage( 'linktoarchive-archivetoday-icon-alt' )->text(),
+				'label' => wfMessage( 'linktoarchive-archivetoday-label' )->text(),
 			];
 		}
 
@@ -46,7 +43,7 @@ class LinkToArchive {
 	}
 
 	/**
-	 * Adds archive.org and archive.today icons/links to external URLs
+	 * Adds archive.org and archive.today text links to external URLs
 	 *
 	 * @param string $url URL being linked to
 	 * @param string $text Link text
@@ -86,19 +83,19 @@ class LinkToArchive {
 			}
 
 			// -------------------------
-			// Generating icon link data
+			// Generating archive link data
 
-			$iconLinks = [];
+			$archiveLinks = [];
 
 			if ( $linkVariant == 'onion' ) {
-				$iconLinks[] = self::singleIconLinkDataGenerator( 'onion', $url );
+				$archiveLinks[] = self::singleLinkDataGenerator( 'onion', $url );
 			} elseif ( $linkVariant == 'archive' ) {
-				$iconLinks[] = self::singleIconLinkDataGenerator( 'archive', $url );
+				$archiveLinks[] = self::singleLinkDataGenerator( 'archive', $url );
 			} elseif ( $linkVariant == 'archivetoday' ) {
-				$iconLinks[] = self::singleIconLinkDataGenerator( 'archivetoday', $url );
+				$archiveLinks[] = self::singleLinkDataGenerator( 'archivetoday', $url );
 			} else {
-				$iconLinks[] = self::singleIconLinkDataGenerator( 'archive', "https://web.archive.org/web/$url", wfMessage( 'linktoarchive-archive-link-desc' )->text() );
-				$iconLinks[] = self::singleIconLinkDataGenerator( 'archivetoday', "https://archive.today/$url", wfMessage( 'linktoarchive-archivetoday-link-desc' )->text() );
+				$archiveLinks[] = self::singleLinkDataGenerator( 'archive', "https://web.archive.org/web/$url", wfMessage( 'linktoarchive-archive-link-desc' )->text() );
+				$archiveLinks[] = self::singleLinkDataGenerator( 'archivetoday', "https://archive.today/$url", wfMessage( 'linktoarchive-archivetoday-link-desc' )->text() );
 			}
 
 			// ------------------------
@@ -116,16 +113,14 @@ class LinkToArchive {
 				$linkAttributes['target'] = $attribs['target'];
 			}
 
-			// Add one or more icon links according to link variant
-			$iconCount = count( $iconLinks );
-			for ( $i = 0; $i < $iconCount; $i++ ) {
-				$linkData = $iconLinks[$i];
+			// Add one or more text label links according to link variant
+			$linkCount = count( $archiveLinks );
+			for ( $i = 0; $i < $linkCount; $i++ ) {
+				$linkData = $archiveLinks[$i];
 
-				$label = wfMessage( 'linktoarchive-archive-label' )->text();
-
-				$link .= '<sup class="ext-link-to-archive' . ( $i < $iconCount - 1 ? ' has-sibling' : '' ) . '" title="' . $linkData['title'] . '">'
+				$link .= '<sup class="ext-link-to-archive' . ( $i < $linkCount - 1 ? ' has-sibling' : '' ) . '" title="' . $linkData['title'] . '">'
 					. Html::rawElement( 'a', array_merge( $linkAttributes, [ 'href' => $linkData['href'] ] ),
-						Html::element( 'span', [ 'class' => $linkData['class'], 'alt' => $linkData['alt'], 'title' => $linkData['alt'] ] )
+						'[' . $linkData['label'] . ']'
 					) . '</sup>';
 			}
 

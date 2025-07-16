@@ -5,8 +5,8 @@
 .ext-link-to-archive {
 	margin-left: 0.3em;
 	margin-right: 0.3em;
-	font-size: inherit;
-	vertical-align: middle;
+	font-size: 0.85em;
+	vertical-align: super;
 	white-space: nowrap;
 }
 
@@ -16,34 +16,7 @@
 
 .ext-link-to-archive a {
 	display: inline-block;
-	padding: 0 3px;
+	padding: 0 2px;
 	vertical-align: baseline;
-}
-
-.ext-link-to-archive a span {
-	display: inline-block;
-	vertical-align: middle;
-	width: 1em;
-	height: 1em;
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
-}
-
-.ext-link-to-archive img,
-.ext-link-to-archive span {
-	vertical-align: middle;
-	border: 0;
-}
-
-.mw-linktoarchive-tor-onion {
-	background-image: url( ../images/tor-onion-logo.svg );
-}
-
-.mw-linktoarchive-internet-archive {
-	background-image: url( ../images/internet-archive-logo.svg );
-}
-
-.mw-linktoarchive-archive-today {
-	background-image: url( ../images/archive-today-logo.svg );
+	text-decoration: none;
 }
