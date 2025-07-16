@@ -1,11 +1,15 @@
 <?php
 namespace LinkToArchive;
 
-use MediaWiki\Html\Html;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
+use MediaWiki\Hook\OutputPageParserOutputHook;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Output\OutputPage;
+use ParserOutput;
 
-class LinkToArchive {
+class LinkToArchive implements OutputPageParserOutputHook {
 	// Define constants for link types for clarity and to avoid magic strings.
 	private const LINK_TYPE_REGULAR = 'regular';
 	private const LINK_TYPE_WEB_ARCHIVE = 'web.archive';
@@ -18,72 +22,98 @@ class LinkToArchive {
 	 *
 	 * @param OutputPage $out The output page object.
 	 */
-	public static function onBeforePageDisplay( OutputPage $out ) {
+	public static function onBeforePageDisplay( OutputPage $out ): void {
 		$out->addModules( [ 'ext.linkToArchive' ] );
 		$out->addModuleStyles( [ 'ext.linkToArchive.styles' ] );
 	}
 
 	/**
-	 * Hook handler for LinkerMakeExternalLink.
-	 * Adds archive.org and archive.today icons/links to external URLs.
+	 * Hook handler for OutputPageParserOutput.
+	 * This is the main entry point. It parses the generated HTML to find and modify external links.
+	 * This approach is more performant and reliable than the LinkerMakeExternalLink hook
+	 * as it runs once per page when the i18n system is fully initialized.
 	 *
-	 * @param string $url URL being linked to
-	 * @param string $text Link text
-	 * @param string &$link Generated HTML of the link (output)
-	 * @param array &$attribs Array of HTML attributes for the link
-	 * @param string|null $linktype Type of external link (optional)
-	 * @return bool|null Returns false to override default link generation, null to use default.
+	 * @param OutputPage $out
+	 * @param ParserOutput $parserOutput
 	 */
-	public static function onLinkerMakeExternalLink( $url, $text, &$link, array &$attribs, $linktype ): ?bool {
-		// Only process http/https links with a valid linktype.
-		if ( !$linktype || !in_array( parse_url( $url, PHP_URL_SCHEME ), [ 'http', 'https' ] ) ) {
-			return null;
+	public function onOutputPageParserOutput( $out, $parserOutput ): void {
+		$html = $parserOutput->getRawText();
+
+		// Avoid processing empty content or content that is not HTML.
+		if ( !$html || !str_contains($html, '<')) {
+			return;
 		}
 
-		// Skip links that should not have archive links.
-		if ( self::shouldSkipLink( $url ) ) {
-			return null;
+		$dom = new DOMDocument();
+		// Suppress warnings from invalid HTML, which can be present in wikitext.
+		// Use LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD to prevent DOMDocument
+		// from adding implicit <html> and <body> tags, which would break the page structure.
+		@$dom->loadHTML( mb_convert_encoding( $html, 'HTML-ENTITIES', 'UTF-8' ), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+
+		$xpath = new DOMXPath( $dom );
+
+		// Find all external links that are not part of an image map or already processed.
+		$links = $xpath->query( '//a[contains(concat(" ", normalize-space(@class), " "), " external ")]' );
+
+		foreach ( $links as $linkNode ) {
+			$url = $linkNode->getAttribute( 'href' );
+
+			// Skip links that are invalid, not http/https, or should otherwise be ignored.
+			if ( !$url || !in_array( parse_url( $url, PHP_URL_SCHEME ), [ 'http', 'https' ], true ) ) {
+				continue;
+			}
+
+			// Check if the link should be skipped based on custom rules.
+			if ( self::shouldSkipLink( $url, $linkNode ) ) {
+				continue;
+			}
+
+			$urlType = self::getUrlType( $url );
+
+			// Create a DocumentFragment to hold the new archive links.
+			$fragment = $dom->createDocumentFragment();
+			// Add a leading space.
+			$fragment->appendChild( $dom->createTextNode( ' ' ) );
+
+			self::addArchiveLinkNodes( $dom, $fragment, $url, $urlType, $linkNode );
+
+			// Insert the fragment containing the new links immediately after the original link.
+			if ( $linkNode->parentNode ) {
+				$linkNode->parentNode->insertBefore( $fragment, $linkNode->nextSibling );
+			}
 		}
 
-		// Add a class to the original link's attributes to signal it has been processed by PHP.
-		// This helps the corresponding JS file avoid reprocessing the same link.
-		$originalLinkAttribs = $attribs;
-		$originalLinkAttribs['class'] = trim( ( $attribs['class'] ?? '' ) . ' php-archive-processed' );
-
-		// Create the original link with the new class.
-		$originalLink = Html::rawElement( 'a', array_merge( $originalLinkAttribs, [ 'href' => $url ] ), $text );
-
-		// Base attributes for the separate archive links.
-		$archiveLinkAttribs = [
-			'class' => 'mw-archive-link',
-			'rel' => $attribs['rel'] ?? 'noopener noreferrer',
-			'target' => $attribs['target'] ?? '_blank'
-		];
-
-		// Determine the link type to avoid redundant regex checks.
-		$urlType = self::getUrlType( $url );
-
-		// Build the output HTML with the original link followed by archive links.
-		$link = $originalLink;
-		self::addArchiveLinks( $url, $urlType, $archiveLinkAttribs, $link );
-
-		// Return false to override MediaWiki's default link generation.
-		return false;
+		// Save the modified HTML back to the parser output.
+		$parserOutput->setRawText( $dom->saveHTML() );
 	}
 
 	/**
-	 * Determines if a URL should be skipped entirely.
+	 * Determines if a URL or link node should be skipped.
 	 *
-	 * @param string $url URL to check.
-	 * @return bool True if the URL should be skipped.
+	 * @param string $url The URL to check.
+	 * @param DOMElement $node The DOM node of the link.
+	 * @return bool True if the link should be skipped.
 	 */
-	private static function shouldSkipLink( string $url ): bool {
+	private static function shouldSkipLink( string $url, DOMElement $node ): bool {
 		// Skip internal actions like editing.
 		if ( str_contains( $url, 'action=edit' ) ) {
 			return true;
 		}
 
-		// Future conditions for skipping links can be added here.
+		// Skip links that are inside an image.
+		if ( $node->getElementsByTagName( 'img' )->length > 0 ) {
+			return true;
+		}
+
+		// Check if archive links have already been added by this extension.
+		$nextSibling = $node->nextSibling;
+		if ( $nextSibling && $nextSibling->nodeType === XML_ELEMENT_NODE ) {
+			$class = $nextSibling->getAttribute( 'class' );
+			if ( str_contains( $class, 'mw-archive-link' ) ) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -107,65 +137,61 @@ class LinkToArchive {
 	}
 
 	/**
-	 * Appends the appropriate archive links to the HTML based on URL type.
+	 * Appends the appropriate archive link nodes to a DOM fragment.
 	 *
-	 * @param string $url URL being linked to.
+	 * @param DOMDocument $dom The main DOM document.
+	 * @param \DOMDocumentFragment $fragment The fragment to append links to.
+	 * @param string $url The original URL being linked to.
 	 * @param string $urlType The classified type of the URL.
-	 * @param array $baseAttribs Base HTML attributes for archive links.
-	 * @param string &$link Link HTML to modify.
+	 * @param DOMElement $originalLinkNode The original link node to copy attributes from.
 	 */
-	private static function addArchiveLinks( string $url, string $urlType, array $baseAttribs, string &$link ): void {
-		// Add space after the original link.
-		$link .= ' ';
+	private static function addArchiveLinkNodes( DOMDocument $dom, \DOMDocumentFragment $fragment, string $url, string $urlType, DOMElement $originalLinkNode ): void {
+		$baseAttribs = [
+			'rel' => $originalLinkNode->getAttribute( 'rel' ) ?: 'noopener noreferrer',
+			'target' => $originalLinkNode->getAttribute( 'target' ) ?: '_blank'
+		];
 
 		switch ( $urlType ) {
 			case self::LINK_TYPE_ONION:
-				$link .= self::createArchiveLink( $url, 'linktoarchive-onion-label', 'linktoarchive-onion-link', 'archive-onion', $baseAttribs );
+				$fragment->appendChild( self::createArchiveLinkNode( $dom, $url, 'linktoarchive-onion-label', 'linktoarchive-onion-link', 'archive-onion', $baseAttribs ) );
 				break;
-
 			case self::LINK_TYPE_WEB_ARCHIVE:
-				$link .= self::createArchiveLink( $url, 'linktoarchive-archive-label', 'linktoarchive-archive-link', 'archive-web', $baseAttribs );
+				$fragment->appendChild( self::createArchiveLinkNode( $dom, $url, 'linktoarchive-archive-label', 'linktoarchive-archive-link', 'archive-web', $baseAttribs ) );
 				break;
-
 			case self::LINK_TYPE_ARCHIVE_TODAY:
-				$link .= self::createArchiveLink( $url, 'linktoarchive-archivetoday-label', 'linktoarchive-archivetoday-link', 'archive-today', $baseAttribs );
+				$fragment->appendChild( self::createArchiveLinkNode( $dom, $url, 'linktoarchive-archivetoday-label', 'linktoarchive-archivetoday-link', 'archive-today', $baseAttribs ) );
 				break;
-
 			case self::LINK_TYPE_REGULAR:
 			default:
-				// For regular links, add both archive options.
-				$link .= self::createArchiveLink( "https://web.archive.org/web/$url", 'linktoarchive-archive-label', 'linktoarchive-archive-link-desc', 'archive-web', $baseAttribs );
-				$link .= ' ';
-				$link .= self::createArchiveLink( "https://archive.today/$url", 'linktoarchive-archivetoday-label', 'linktoarchive-archivetoday-link-desc', 'archive-today', $baseAttribs );
+				$fragment->appendChild( self::createArchiveLinkNode( $dom, "https://web.archive.org/web/$url", 'linktoarchive-archive-label', 'linktoarchive-archive-link-desc', 'archive-web', $baseAttribs ) );
+				$fragment->appendChild( $dom->createTextNode( ' ' ) );
+				$fragment->appendChild( self::createArchiveLinkNode( $dom, "https://archive.today/$url", 'linktoarchive-archivetoday-label', 'linktoarchive-archivetoday-link-desc', 'archive-today', $baseAttribs ) );
 				break;
 		}
 	}
 
 	/**
-	 * Creates the HTML for a single archive link.
+	 * Creates a single DOM node for an archive link.
 	 *
+	 * @param DOMDocument $dom The main DOM document.
 	 * @param string $href The URL for the link.
 	 * @param string $labelKey The i18n message key for the link text.
 	 * @param string $titleKey The i18n message key for the link title attribute.
 	 * @param string $extraClass An additional CSS class to add to the link.
-	 * @param array $baseAttribs The base HTML attributes for the link.
-	 * @return string The generated HTML for the anchor tag.
+	 * @param array $baseAttribs Base attributes ('rel', 'target') for the link.
+	 * @return DOMElement The generated anchor element.
 	 */
-	private static function createArchiveLink( string $href, string $labelKey, string $titleKey, string $extraClass, array $baseAttribs ): string {
+	private static function createArchiveLinkNode( DOMDocument $dom, string $href, string $labelKey, string $titleKey, string $extraClass, array $baseAttribs ): DOMElement {
 		$lang = MediaWikiServices::getInstance()->getContentLanguage();
-		$labelMsg = wfMessage( $labelKey )->inLanguage( $lang );
-		// Use text() and manually escape. If the message doesn't exist, text() will
-		// return the key, which is the desired fallback in this situation.
-		$labelText = '[' . htmlspecialchars( $labelMsg->text() ) . ']';
+		$label = '[' . wfMessage( $labelKey )->inLanguage( $lang )->escaped() . ']';
+		$title = wfMessage( $titleKey )->inLanguage( $lang )->escaped();
 
-		$titleMsg = wfMessage( $titleKey )->inLanguage( $lang );
-		$titleText = htmlspecialchars( $titleMsg->text() );
-
-		$attribs = array_merge( $baseAttribs, [
-			'href' => $href,
-			'title' => $titleText,
-			'class' => trim( $baseAttribs['class'] . ' ' . $extraClass )
-		] );
-		return Html::rawElement( 'a', $attribs, $labelText );
+		$a = $dom->createElement( 'a', $label );
+		$a->setAttribute( 'href', $href );
+		$a->setAttribute( 'title', $title );
+		$a->setAttribute( 'class', 'mw-archive-link ' . $extraClass );
+		$a->setAttribute( 'rel', $baseAttribs['rel'] );
+		$a->setAttribute( 'target', $baseAttribs['target'] );
+		return $a;
 	}
 }

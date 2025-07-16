@@ -6,8 +6,8 @@
 	"descriptionmsg": "linktoarchive-desc",
 	"url": "https://github.com/Archi-Strasbourg/mediawiki-link-to-archive",
 	"Hooks": {
-		"LinkerMakeExternalLink": [
-			"LinkToArchive\\LinkToArchive::onLinkerMakeExternalLink"
+		"OutputPageParserOutput": [
+			"LinkToArchive\\LinkToArchive"
 		],
 		"BeforePageDisplay": [
 			"LinkToArchive\\LinkToArchive::onBeforePageDisplay"
